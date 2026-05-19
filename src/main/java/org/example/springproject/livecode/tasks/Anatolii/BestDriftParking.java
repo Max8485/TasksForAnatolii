@@ -1,9 +1,7 @@
 package org.example.springproject.livecode.tasks.Anatolii;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class BestDriftParking {
     ////Найти лучшую парковку для дрифта парковку
@@ -93,24 +91,57 @@ public class BestDriftParking {
 
     // Наименьшая относительная заполненность (заполненность = занятые места / общая вместимость).
     // Если заполненность одинаковая - выбираем парковку с большей вместимостью.
-    public int findBestDriftParkingId(List<Parking> parkings, List<Car> cars) {
-        Map<Integer, Double> relativeOccupancy = calculateFreeSpacesAndRelativeOccupancy(parkings, cars);
+    public int findBestDriftParkingId(List<Parking> parkList, List<Car> cars) {
+        Map<Integer, List<Car>> parkCar = new HashMap<>();   //теперь есть мапа с парковками и машинами
 
-        // Находим парковку с наименьшей заполненностью
-        return parkings.stream()
-                .min((p1, p2) -> {
-                    double fill1 = relativeOccupancy.get(p1.id);
-                    double fill2 = relativeOccupancy.get(p2.id);
+        //заполнили парковками с пустыми списками
+        for(Parking park : parkList) {
+            parkCar.put(park.id, new ArrayList<>());
+        }
 
-                    if (Math.abs(fill1 - fill2) < 0.0001) {
-                        // Одинаковая заполненность - выбираем с большей вместимостью
-                        return Integer.compare(p2.capacity, p1.capacity);
-                    }
-                    // Меньшая заполненность
-                    return Double.compare(fill1, fill2);
-                })
-                .map(Parking::getId)
+        //заполнили парковки машинами
+        for (Car car : cars) {
+            int parkingId = car.parkingId;
+
+            if(parkCar.containsKey(parkingId)) {
+                parkCar.get(parkingId).add(car);
+            }
+        }
+
+        // Создаем Map вместимости для быстрого доступа
+        Map<Integer, Integer> capacityMap = parkList.stream()
+                        .collect(Collectors.toMap(p -> p.id, p -> p.capacity));
+
+       return parkCar.entrySet().stream()
+                .min(Comparator.comparing((Map.Entry<Integer, List<Car>> entry) -> {
+                            int capacity = capacityMap.get(entry.getKey());
+                            return (double) entry.getValue().size() / capacity;
+                        })
+                                .thenComparing(entry -> -capacityMap.get(entry.getKey()))
+                )
+                .map(Map.Entry::getKey)
                 .orElse(-1);
+
+
+
+
+//        Map<Integer, Double> relativeOccupancy = calculateFreeSpacesAndRelativeOccupancy(parkings, cars);
+//
+//        // Находим парковку с наименьшей заполненностью
+//        return parkings.stream()
+//                .min((p1, p2) -> {
+//                    double fill1 = relativeOccupancy.get(p1.id);
+//                    double fill2 = relativeOccupancy.get(p2.id);
+//
+//                    if (Math.abs(fill1 - fill2) < 0.0001) {
+//                        // Одинаковая заполненность - выбираем с большей вместимостью
+//                        return Integer.compare(p2.capacity, p1.capacity);
+//                    }
+//                    // Меньшая заполненность
+//                    return Double.compare(fill1, fill2);
+//                })
+//                .map(Parking::getId)
+//                .orElse(-1);
     }
 
 
