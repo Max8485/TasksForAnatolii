@@ -12,7 +12,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-public class LiveCode {
+public class LiveCode {  //Комментарий для проверки Jira
     public static void main(String[] args) {
         //Уровень 1: Базовый (Lambda)
 
